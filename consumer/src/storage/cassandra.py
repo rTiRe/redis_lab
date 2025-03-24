@@ -9,7 +9,7 @@ class Database():
         self.__session = self.__cluster.connect()
         self.__session.execute(f"""
             CREATE KEYSPACE IF NOT EXISTS {settings.DB_KEYSPACE}
-            WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+            WITH replication = {{'class': 'SimpleStrategy', 'replication_factor': 1}};
         """)
         self.__session.set_keyspace(settings.DB_KEYSPACE)
         self.__session.execute(f"""

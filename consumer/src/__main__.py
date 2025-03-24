@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 import aio_pika
 from cassandra.query import SimpleStatement
@@ -8,12 +9,15 @@ from src.storage import cassandra
 from config import settings
 
 
+logging.basicConfig(level=logging.INFO)
+
+
 async def callback(message: aio_pika.IncomingMessage) -> str:
     async with message.process():
         body = message.body.decode()
-        print(f' [x] Consumer {settings.NAME} received {body}')
-        query = SimpleStatement("""
-            INSERT INTO messages_consumer1 (id, message)
+        logging.info(f' [x] Consumer {settings.NAME} received {body}')
+        query = SimpleStatement(f"""
+            INSERT INTO messages_{settings.NAME} (id, message)
             VALUES (uuid(), %s)
         """, consistency_level=ConsistencyLevel.ONE)
         cassandra.session.execute(query, (body,))
@@ -28,15 +32,9 @@ async def main():
         durable=True,
     )
     queue = await channel.declare_queue(exclusive=True)
-    await queue.bind(exchange, routing_key='')
-    cassandra.session.execute("""
-        CREATE TABLE IF NOT EXISTS messages_consumer1 (
-            id UUID PRIMARY KEY,
-            message TEXT
-        )
-    """)
+    await queue.bind(exchange, 'logs')
     await queue.consume(callback)
-    print(f' [*] Consumer {settings.NAME} waiting for messages')
+    logging.info(f' [*] Consumer {settings.NAME} waiting for messages')
     await asyncio.Future()
 
 
