@@ -22,7 +22,11 @@ async def callback(message: aio_pika.IncomingMessage) -> str:
 async def main():
     connection = await aio_pika.connect_robust(settings.RABBIT_URL)
     channel = await connection.channel()
-    exchange = await channel.declare_exchange(name='logs', type='fanout', durable=True)
+    exchange = await channel.declare_exchange(
+        name='logs',
+        type=aio_pika.ExchangeType.FANOUT,
+        durable=True,
+    )
     queue = await channel.declare_queue(exclusive=True)
     await queue.bind(exchange, routing_key='')
     cassandra.session.execute("""

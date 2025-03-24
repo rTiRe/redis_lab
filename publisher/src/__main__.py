@@ -8,7 +8,11 @@ from config import settings
 async def main():
     connection = await aio_pika.connect_robust(settings.RABBIT_URL)
     channel = await connection.channel()
-    await channel.declare_exchange(name='logs', type='fanout', durable=True)
+    await channel.declare_exchange(
+        name='logs',
+        type=aio_pika.ExchangeType.FANOUT,
+        durable=True,
+    )
     with open('input.txt', 'r') as file:
         for line in file.readlines():
             message = line.strip()
