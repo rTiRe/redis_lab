@@ -1,0 +1,69 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 3s
+      timeout: 10s
+      retries: 3
+    container_name: rabbitmq_service
+
+  cassandra:
+    image: cassandra:latest
+    ports:
+      - "9042:9042"
+    environment:
+      CASSANDRA_CLUSTER_NAME: "MyCluster"
+    volumes:
+      - cassandra-data:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -u cassandra -p cassandra -e 'DESCRIBE KEYSPACES'"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    container_name: cassandra_service
+
+  consumer1:
+    build: './consumer'
+    container_name: consumer-1_service
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      cassandra:
+        condition: service_healthy
+    command: bash -c "poetry run python -m src"
+    volumes:
+      - ./consumer:/usr/src/app/consumer_service
+
+  consumer2:
+    build: './consumer'
+    container_name: consumer-2_service
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      cassandra:
+        condition: service_healthy
+    command: bash -c "poetry run python -m src"
+    volumes:
+      - ./consumer:/usr/src/app/consumer_service
+
+  publisher:
+    build: './publisher'
+    container_name: publisher_service
+    depends_on:
+      consumer1:
+        condition: service_started
+      consumer2:
+        condition: service_started
+    volumes:
+      - ./publisher:/usr/src/app/publisher_service
+    command: bash -c "poetry run python -m src"
+
+volumes:
+  cassandra-data:
