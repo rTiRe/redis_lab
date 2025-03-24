@@ -10,8 +10,8 @@ declare -A scripts=(
 )
 
 declare -A services=(
-    ['consumer']='users_service'
-    ['publisher']='subscriptions_service'
+    ['consumer']='consumer_service'
+    ['publisher']='publisher_service'
 )
 
 service=""
