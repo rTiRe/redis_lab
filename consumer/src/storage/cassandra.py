@@ -14,8 +14,10 @@ class Database():
         self.__session.set_keyspace(settings.DB_KEYSPACE)
         self.__session.execute(f"""
             CREATE TABLE IF NOT EXISTS messages_{settings.NAME} (
-                id UUID PRIMARY KEY,
-                message TEXT
+                id UUID,
+                hash_id UUID,
+                message TEXT,
+                PRIMARY KEY (hash_id, id)
             )
         """)
 

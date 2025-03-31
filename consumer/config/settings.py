@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     RABBIT_URL: str
     DB_CLUSTER: str
     DB_KEYSPACE: str
+    REDIS_URL: str
     NAME: str = getenv('HOSTNAME')
 
     class Config:
